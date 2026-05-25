@@ -1,0 +1,16 @@
+<Project>
+  <!-- Single source of truth for the package version.
+       CI overrides this with /p:Version=X.Y.Z — both packages always get the same value. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Authors>AetherNet Contributors</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/AdielMag/AetherNet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AdielMag/AetherNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+</Project>
