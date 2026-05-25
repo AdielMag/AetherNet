@@ -1,0 +1,74 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// REFERENCE EXAMPLE — Unity client-side bridge using LiteNetLib
+// ─────────────────────────────────────────────────────────────────────────────
+
+using System;
+using System.Net;
+using System.Net.Sockets;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using UnityEngine;
+using AetherNet;
+using AetherNet.Network;
+
+namespace AetherNet.Examples.LiteNetLib
+{
+    public sealed class LiteNetLibClientBridge : MonoBehaviour, INetEventListener
+    {
+        [SerializeField] private string _serverAddress = "127.0.0.1";
+        [SerializeField] private int    _serverPort    = 7777;
+
+        private NetManager       _client;
+        private NetPeer?         _server;
+        private StateInterpolator _interpolator;
+        private EntityState[]    _interpolatedStates;
+        private float            _serverTime;
+
+        private void Awake()
+        {
+            _client             = new NetManager(this);
+            _interpolator       = new StateInterpolator(renderDelaySeconds: 0.1f);
+            _interpolatedStates = new EntityState[SimulationConstants.MaxBodies];
+        }
+
+        private void Start()
+        {
+            _client.Start();
+            _client.Connect(_serverAddress, _serverPort, "aethernet");
+        }
+
+        private void Update()
+        {
+            _client.PollEvents();
+            _serverTime += Time.deltaTime;
+            int count = _interpolator.Sample(_serverTime, _interpolatedStates);
+            ApplySnapshot(_interpolatedStates, count);
+        }
+
+        private void OnDestroy() => _client.Stop();
+
+        private void ApplySnapshot(EntityState[] states, int count)
+        {
+            var manager = AetherViewManager.Instance;
+            if (manager == null) return;
+        }
+
+        public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod method)
+        {
+            uint tick  = reader.GetUInt();
+            int  count = reader.GetInt();
+            var states     = new EntityState[count];
+            int byteCount  = count * System.Runtime.InteropServices.Marshal.SizeOf<EntityState>();
+            byte[] payload = reader.GetRemainingBytes();
+            StateSerializer.Deserialize(payload, 0, byteCount, states);
+            _interpolator.ReceiveSnapshot(tick, _serverTime, states, count);
+        }
+
+        public void OnPeerConnected(NetPeer peer) { _server = peer; Debug.Log($"[AetherNet Example] Connected to server: {peer.EndPoint}"); }
+        public void OnPeerDisconnected(NetPeer peer, DisconnectInfo info) { _server = null; Debug.Log("[AetherNet Example] Disconnected from server."); }
+        public void OnNetworkError(IPEndPoint endPoint, SocketError socketError) { }
+        public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType) { }
+        public void OnNetworkLatencyUpdate(NetPeer peer, int latency) { }
+        public void OnConnectionRequest(ConnectionRequest request) => request.Reject();
+    }
+}
