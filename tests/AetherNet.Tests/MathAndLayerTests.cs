@@ -61,9 +61,11 @@ public sealed class MathExtensionsTests
     [Fact]
     public void LerpAngle_WrapsCorrectly()
     {
-        // Lerping from 350° to 10° at t=0.5 should give ~0° (shortest path)
+        // Lerping from 350° to 10° at t=0.5 should land near the wrap point.
+        // 360° and 0° are equivalent, so normalise before asserting.
         float result = MathExtensions.LerpAngle(350f, 10f, 0.5f);
-        Assert.True(MathF.Abs(result - 0f) < 1f, $"Expected ~0°, got {result}");
+        float normalised = result % 360f;
+        Assert.True(MathF.Abs(normalised) < 1f, $"Expected ~0° (mod 360), got {result}");
     }
 }
 
