@@ -1,4 +1,5 @@
 using System;
+using AetherNet;
 using SNV2 = System.Numerics.Vector2;
 
 namespace AetherNet.Network;
