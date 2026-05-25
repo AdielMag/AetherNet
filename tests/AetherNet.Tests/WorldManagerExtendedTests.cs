@@ -91,7 +91,7 @@ public sealed class WorldManagerExtendedTests
     {
         var w = ZeroGravityWorld();
         uint before = w.TickNumber;
-        w.Advance(0.016f);
+        w.Advance(SimulationConstants.FixedTimestep); // exactly one tick
         Assert.True(w.TickNumber > before);
     }
 
