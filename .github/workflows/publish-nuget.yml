@@ -11,7 +11,8 @@ on:
         default: ""
 
 permissions:
-  contents: write  # needed to create and push the version tag
+  contents: write   # needed to create and push the version tag
+  packages: write   # needed to publish to GitHub Packages
 
 jobs:
   publish:
@@ -84,6 +85,19 @@ jobs:
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget add source \
+            --username ${{ github.repository_owner }} \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text \
+            --name github \
+            "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          dotnet nuget push "nupkg/*.nupkg" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --source github \
+            --skip-duplicate
 
       # ── Create GitHub Release so repo sidebar links to each release ─────────
       - name: Create GitHub Release
