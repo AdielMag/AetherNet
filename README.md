@@ -4,7 +4,8 @@
 
   <p>
     <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/adielmag/aethernet/build.yml?style=flat-square&logo=github">
-    <img alt="NuGet" src="https://img.shields.io/nuget/v/AetherNet.Shared?style=flat-square&logo=nuget">
+    <img alt="NuGet" src="https://img.shields.io/nuget/v/AetherNet.Shared?style=flat-square&logo=nuget&label=AetherNet.Shared">
+    <img alt="NuGet Unity" src="https://img.shields.io/nuget/v/AetherNet.Unity?style=flat-square&logo=nuget&label=AetherNet.Unity">
     <img alt="License" src="https://img.shields.io/github/license/adielmag/aethernet?style=flat-square">
     <img alt=".NET" src="https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet">
   </p>
@@ -14,70 +15,89 @@
 
 ## What is AetherNet?
 
-AetherNet completely decouples 2D physics simulation from Unity’s native engine. A single, deterministic physics loop powered by [Aether.Physics2D](https://github.com/nkast/Aether.Physics2D) (a pure C# Box2D port, actively maintained) runs identically on a headless .NET 8 server and a Unity client — with zero runtime heap allocation.
-
-Unity is used strictly as a visual layer. There are no `Rigidbody2D` components, no `Physics2D.Simulate` calls, and no GC pressure from the physics tick. This makes AetherNet the right foundation for server-authoritative multiplayer games where client and server must agree on physics state down to the bit.
+AetherNet completely decouples 2D physics simulation from Unity’s native engine. A single, deterministic physics loop powered by [Aether.Physics2D](https://github.com/nkast/Aether.Physics2D) (a pure C# Box2D port) runs identically on a headless .NET 8 server and a Unity client — with zero runtime heap allocation.
 
 ---
 
-## Features
+## Packages
 
-- ⚡ **Zero runtime GC allocation** — flat memory profile during gameplay, pre-allocated parallel arrays throughout
-- 🎯 **100% deterministic fixed-timestep simulation** — accumulator-based tick ensures identical results on server and client
-- 🖥️ **Headless .NET 8 server** — no Unity license required on the game server; loads baked map files directly
-- 💥 **Unity-style collision callbacks** — `OnCollisionEnter`, `OnCollisionExit`, `OnTriggerEnter`, `OnTriggerExit` via interface dispatch (no reflection)
-- 💪 **Full force API** — `AddForce`, `AddTorque`, `AddForceAtPosition` with `ForceMode` (Force, Impulse, VelocityChange, Acceleration)
-- 🔍 **Physics queries** — `Raycast`, `OverlapCircle`, `OverlapBox` with zero-alloc result buffers
-- 🔗 **Transport-agnostic networking** — bring your own transport; plug in Mirror, FishNet, LiteNetLib, or raw sockets
-- 💤 **Body sleep management** — optional broad-phase deactivation for distant bodies
-- 🔒 **Rigidbody constraints** — `FreezePositionX/Y`, `FreezeRotation` applied post-step, no drift
+| Package | Target | Description |
+|---|---|---|
+| `AetherNet.Shared` | .NET Standard 2.0 / .NET 8 | Core simulation: `PhysicsWorldManager`, collision, networking utilities, queries. Used on both server and client. |
+| `AetherNet.Unity` | Unity (via NuGetForUnity) | MonoBehaviour components: `AetherRigidbody`, colliders, `AetherViewManager`, physics queries, scene baker, editor gizmos. |
 
 ---
 
 ## Install
 
+### Server / .NET project
+
 ```
 dotnet add package AetherNet.Shared
 ```
 
-Or add to your `.csproj`:
-```xml
-<PackageReference Include="AetherNet.Shared" Version="0.1.0" />
+### Unity project
+
+1. Install [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity) (free, open source).
+2. In Unity: **NuGet → Manage NuGet Packages**, search for **AetherNet.Unity** and install.
+   - `AetherNet.Shared` is pulled in automatically as a dependency.
+
+---
+
+## Features
+
+- ⚡ **Zero runtime GC allocation** — pre-allocated parallel arrays throughout
+- 🎯 **100% deterministic fixed-timestep simulation** — identical results on server and client
+- 🖥️ **Headless .NET 8 server** — no Unity license required; loads baked JSON map files
+- 💥 **Unity-style collision callbacks** — `OnCollisionEnter/Exit`, `OnTriggerEnter/Exit` via interface dispatch
+- 💪 **Full force API** — `AddForce`, `AddTorque`, `AddForceAtPosition` with `ForceMode`
+- 🔍 **Physics queries** — `Raycast`, `OverlapCircle`, `OverlapBox` with zero-alloc buffers
+- 🏗️ **Editor scene baker** — **AetherNet → Bake Scene to JSON** exports map data for the headless server
+- 🎨 **Scene View gizmos** — box, circle, and polygon colliders drawn in the editor
+- 🔗 **Transport-agnostic networking** — plug in Mirror, FishNet, LiteNetLib, or raw sockets
+- 🔒 **Rigidbody constraints** — `FreezePositionX/Y`, `FreezeRotation` applied post-step
+
+---
+
+## Quick Start — Unity
+
+### Scene Setup
+
+1. Create a GameObject → Add **AetherNet → View Manager**.
+2. On entity prefabs, add **AetherNet → Rigidbody** + one of **Box / Circle / Polygon Collider**.
+3. Bake the scene for the server: **AetherNet → Bake Scene to JSON**.
+
+### Physics & Collisions
+
+```csharp
+using AetherNet;
+
+public class Player : MonoBehaviour, IAetherCollisionHandler, IAetherTriggerHandler
+{
+    private AetherRigidbody _rb;
+    void Awake() => _rb = GetComponent<AetherRigidbody>();
+
+    void Update()
+    {
+        if (Input.GetKey(KeyCode.Space))
+            _rb.AddForce(Vector2.up * 500f, ForceMode.Impulse);
+    }
+
+    public void OnCollisionEnter(ref CollisionData d) => Debug.Log($"Hit entity {d.EntityIdB}");
+    public void OnCollisionExit(ref CollisionData d)  { }
+    public void OnTriggerEnter(ref TriggerData d)     => Debug.Log($"Trigger {d.OtherEntityId}");
+    public void OnTriggerExit(ref TriggerData d)      { }
+}
 ```
 
 ---
 
-## Architecture
-
-```mermaid
-graph TD
-    subgraph Server [".NET 8 Headless Server"]
-        SL[ServerTickLoop] -->|Advance| PM
-        ML[MapLoader] -->|CreateBody| PM
-    end
-
-    subgraph Shared ["AetherNet.Shared (.NET Standard 2.0 / .NET 8)"]
-        PM[PhysicsWorldManager]
-        CE[CollisionEventQueue]
-        CT[ContactTracker]
-        NS[Network Utilities\nStateSerializer · StateInterpolator\nSnapshotBuffer · TickAcknowledger]
-        PM --> CE
-        PM --> CT
-    end
-
-    Transport["Your Transport\nMirror · FishNet · LiteNetLib"] <-->|INetworkStateProvider| NS
-```
-
----
-
-## Quick Start — Server
+## Quick Start — Headless Server
 
 ```bash
 cd src/AetherNet.Server
 dotnet run -- maps/level01.json
 ```
-
-The server loads the baked `level01.json`, runs the physics loop at 60 Hz, and calls your `INetworkStateProvider.OnTickComplete` each tick.
 
 ```csharp
 var world  = new PhysicsWorldManager(WorldConfig.Default);
@@ -90,7 +110,6 @@ loop.SetSnapshotCallback((states, count, tick) =>
     int bytes = StateSerializer.Serialize(states, count, sendBuffer, 0);
     myTransport.BroadcastUnreliable(sendBuffer, bytes);
 });
-
 loop.Run(CancellationToken.None);
 ```
 
@@ -98,42 +117,26 @@ loop.Run(CancellationToken.None);
 
 ## Networking
 
-AetherNet provides **contracts and utilities**, not a bundled transport:
-
 | Type | Purpose |
 |---|---|
 | `INetworkStateProvider` | Hook into the tick loop — implement to broadcast state |
-| `StateSerializer` | Zero-alloc binary write/read of `EntityState[]` arrays |
-| `StateInterpolator` | Client-side snapshot lerp — smooths 20 Hz network updates to 144 Hz render |
+| `StateSerializer` | Zero-alloc binary write/read of `EntityState[]` |
+| `StateInterpolator` | Client-side snapshot lerp for smooth rendering |
 | `SnapshotBuffer` | Circular buffer of authoritative snapshots |
-| `TickAcknowledger` | Bitmask-based ack tracking for delta compression |
+| `TickAcknowledger` | Bitmask ack tracking for delta compression |
 
-See **[`examples/LiteNetLibExample/`](examples/LiteNetLibExample/)** for a complete working implementation using LiteNetLib.
-
----
-
-## Performance Guidelines
-
-- **No LINQ in hot paths.** Use raw `for` loops in physics callbacks.
-- **No `GetComponent` at runtime.** Cache all references in `Awake`.
-- **Never feed `Time.deltaTime` to physics.** Use the accumulator exclusively via `Advance()`.
-- **Pass large structs by `in` or `ref`.** `CollisionData`, `TriggerData`, `BodyDef` — never copy by value in hot code.
-- **Pre-allocate result buffers.** `PhysicsQueryBuffer` is created once and reused indefinitely.
+See **[`examples/LiteNetLibExample/`](examples/LiteNetLibExample/)** for a complete LiteNetLib integration.
 
 ---
 
 ## Contributing
 
-1. Fork the repo and create a branch: `feature/your-feature` or `fix/issue-description`.
-2. All changes to `AetherNet.Shared` must pass `dotnet test`.
-3. PR checklist:
-   - [ ] `dotnet build AetherNet.sln` with no errors or warnings
-   - [ ] `dotnet test` — all tests green, determinism tests pass
-   - [ ] No new GC.Alloc in hot paths
-   - [ ] New public API documented with XML summary comments
+1. Fork and branch: `feature/your-feature` or `fix/issue`.
+2. All `AetherNet.Shared` changes must pass `dotnet test`.
+3. PR checklist: build clean, tests green, no new GC allocs in hot paths.
 
 ---
 
 ## License
 
-[MIT](LICENSE) — free to use in commercial and open-source projects.
+[MIT](LICENSE)

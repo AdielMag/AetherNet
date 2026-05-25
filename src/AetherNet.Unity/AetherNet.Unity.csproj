@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PackageId>AetherNet.Unity</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>AetherNet Contributors</Authors>
+    <Description>Unity MonoBehaviour components for AetherNet — GC-free, deterministic 2D physics for server-authoritative multiplayer. Install via NuGetForUnity. Includes AetherRigidbody, Box/Circle/Polygon colliders, AetherViewManager, physics queries, scene baker, and editor gizmos.</Description>
+    <PackageTags>unity;physics;deterministic;multiplayer;server-authoritative;gc-free;nugetforunity</PackageTags>
+    <PackageProjectUrl>https://github.com/AdielMag/AetherNet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AdielMag/AetherNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!--
+    Source-only package: UnityEngine.dll is not available outside Unity, so all .cs
+    files are excluded from compilation here. NuGetForUnity extracts them into the
+    Unity project where Unity's own compiler picks them up natively.
+  -->
+  <ItemGroup>
+    <Compile Remove="**/*.cs" />
+  </ItemGroup>
+
+  <!-- Runtime components -->
+  <ItemGroup>
+    <Content Include="Runtime/Components/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Runtime/Components/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+    <Content Include="Runtime/Core/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Runtime/Core/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+    <Content Include="Runtime/Network/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Runtime/Network/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+    <Content Include="Runtime/Physics/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Runtime/Physics/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+    <Content Include="Runtime/Queries/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Runtime/Queries/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+  </ItemGroup>
+
+  <!-- Editor-only scripts: placed under Editor/ so Unity only compiles them in editor builds -->
+  <ItemGroup>
+    <Content Include="Editor/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Editor/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+    <Content Include="Editor/Gizmos/*.cs">
+      <Pack>true</Pack>
+      <PackagePath>contentFiles/cs/any/Editor/Gizmos/%(Filename)%(Extension)</PackagePath>
+      <BuildAction>Compile</BuildAction>
+      <CopyToOutput>false</CopyToOutput>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    AetherNet.Shared is a required runtime dependency for consumers.
+    ExcludeAssets=all  — don't pull DLLs into this build-less project.
+    PrivateAssets=none — the dependency IS emitted in the .nuspec so NuGetForUnity
+                         installs AetherNet.Shared automatically alongside this package.
+    Version=$(Version) — stays in sync when CI passes /p:Version=x.y.z to both packs.
+  -->
+  <ItemGroup>
+    <PackageReference Include="AetherNet.Shared" Version="$(Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+      <PrivateAssets>none</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

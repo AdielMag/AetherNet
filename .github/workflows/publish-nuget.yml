@@ -28,12 +28,8 @@ jobs:
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
           else
-            # Find the latest semver tag (vMAJOR.MINOR.PATCH)
             LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-            if [ -z "$LATEST" ]; then
-              LATEST="v0.0.0"
-            fi
-            # Strip v prefix and increment patch
+            if [ -z "$LATEST" ]; then LATEST="v0.0.0"; fi
             BASE=${LATEST#v}
             IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
             PATCH=$((PATCH + 1))
@@ -54,20 +50,37 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore
+      # ── AetherNet.Shared ────────────────────────────────────────────────────
+      - name: Restore AetherNet.Shared
         run: dotnet restore src/AetherNet.Shared/AetherNet.Shared.csproj
 
-      - name: Pack
+      - name: Pack AetherNet.Shared
         run: >
           dotnet pack src/AetherNet.Shared/AetherNet.Shared.csproj
-          -c Release
-          -o nupkg
+          -c Release -o nupkg
           /p:Version=${{ steps.version.outputs.VERSION }}
           --no-restore
 
+      # ── AetherNet.Unity (source-only, depends on AetherNet.Shared) ──────────
+      - name: Add local NuGet source so AetherNet.Unity can resolve AetherNet.Shared
+        run: dotnet nuget add source ${{ github.workspace }}/nupkg --name local-build
+
+      - name: Restore AetherNet.Unity
+        run: >
+          dotnet restore src/AetherNet.Unity/AetherNet.Unity.csproj
+          /p:Version=${{ steps.version.outputs.VERSION }}
+
+      - name: Pack AetherNet.Unity
+        run: >
+          dotnet pack src/AetherNet.Unity/AetherNet.Unity.csproj
+          -c Release -o nupkg
+          /p:Version=${{ steps.version.outputs.VERSION }}
+          --no-restore
+
+      # ── Push both packages ──────────────────────────────────────────────────
       - name: Push to NuGet.org
         run: >
-          dotnet nuget push nupkg/*.nupkg
+          dotnet nuget push "nupkg/*.nupkg"
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
