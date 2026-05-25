@@ -41,7 +41,11 @@ public sealed class CollisionEventTests
 
         world.SetLinearVelocity(1, new Vector2(0f, -2f));
 
-        for (int i = 0; i < 120; i++) { world.Advance(SimulationConstants.FixedTimestep); world.Events.DrainAll(sink); }
+        for (int i = 0; i < 120; i++)
+        {
+            world.Advance(SimulationConstants.FixedTimestep);
+            world.Events.DrainAll(sink);
+        }
 
         Assert.True(sink.Enters.Count >= 1, $"Expected ≥1 collision enters, got {sink.Enters.Count}");
     }
@@ -50,8 +54,10 @@ public sealed class CollisionEventTests
     public void ContactTracker_IsNew_ReturnsTrueOnlyOnce()
     {
         var tracker = new ContactTracker(256);
+
         bool added1 = tracker.TryAddNew(0, 1, 1, out bool isNew1);
         bool added2 = tracker.TryAddNew(0, 1, 2, out bool isNew2);
+
         Assert.True(added1 && isNew1,  "First contact should be new");
         Assert.True(added2 && !isNew2, "Second contact same pair should NOT be new");
     }
@@ -60,10 +66,13 @@ public sealed class CollisionEventTests
     public void ContactTracker_Remove_AllowsReAdd()
     {
         var tracker = new ContactTracker(256);
+
         tracker.TryAddNew(0, 1, 1, out _);
         bool removed = tracker.Remove(0, 1);
         bool addedAgain = tracker.TryAddNew(0, 1, 3, out bool isNewAgain);
-        Assert.True(removed); Assert.True(addedAgain && isNewAgain);
+
+        Assert.True(removed,               "Remove should succeed");
+        Assert.True(addedAgain && isNewAgain, "Re-add after remove should be new");
     }
 
     [Fact]
@@ -72,11 +81,31 @@ public sealed class CollisionEventTests
         var statesIn  = new EntityState[3];
         var statesOut = new EntityState[3];
         var buf       = new byte[1024];
+
         for (int i = 0; i < 3; i++)
-            statesIn[i] = new EntityState { EntityId = i, IsAwake = true, Transform = new TransformState { Position = new Vector2(i * 1.1f, i * 2.2f), Angle = i * 0.5f, LinearVelocity = new Vector2(i * 0.1f, i * 0.2f), AngularVelocity = i * 0.3f } };
+        {
+            statesIn[i] = new EntityState
+            {
+                EntityId = i,
+                IsAwake  = true,
+                Transform = new TransformState
+                {
+                    Position        = new Vector2(i * 1.1f, i * 2.2f),
+                    Angle           = i * 0.5f,
+                    LinearVelocity  = new Vector2(i * 0.1f, i * 0.2f),
+                    AngularVelocity = i * 0.3f,
+                },
+            };
+        }
+
         int written = AetherNet.Network.StateSerializer.Serialize(statesIn, 3, buf, 0);
         int read    = AetherNet.Network.StateSerializer.Deserialize(buf, 0, written, statesOut);
+
         Assert.Equal(3, read);
-        for (int i = 0; i < 3; i++) { Assert.Equal(statesIn[i].EntityId, statesOut[i].EntityId); Assert.Equal(statesIn[i].Transform.Position, statesOut[i].Transform.Position); }
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.Equal(statesIn[i].EntityId, statesOut[i].EntityId);
+            Assert.Equal(statesIn[i].Transform.Position, statesOut[i].Transform.Position);
+        }
     }
 }
