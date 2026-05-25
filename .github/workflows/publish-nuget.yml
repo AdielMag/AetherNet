@@ -80,9 +80,13 @@ jobs:
 
       # ── Push both packages ──────────────────────────────────────────────────
       - name: Push to NuGet.org
+        # Skipped gracefully if NUGET_API_KEY secret is not yet configured
+        if: ${{ secrets.NUGET_API_KEY != '' }}
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: >
           dotnet nuget push "nupkg/*.nupkg"
-          --api-key ${{ secrets.NUGET_API_KEY }}
+          --api-key "$NUGET_API_KEY"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
 

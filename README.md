@@ -4,6 +4,7 @@
 
   <p>
     <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/adielmag/aethernet/build.yml?style=flat-square&logo=github">
+    <img alt="Coverage" src="https://img.shields.io/codecov/c/github/adielmag/aethernet?style=flat-square&logo=codecov">
     <img alt="NuGet" src="https://img.shields.io/nuget/v/AetherNet.Shared?style=flat-square&logo=nuget&label=AetherNet.Shared">
     <img alt="NuGet Unity" src="https://img.shields.io/nuget/v/AetherNet.Unity?style=flat-square&logo=nuget&label=AetherNet.Unity">
     <img alt="License" src="https://img.shields.io/github/license/adielmag/aethernet?style=flat-square">
