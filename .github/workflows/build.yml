@@ -28,7 +28,7 @@ jobs:
       - name: Test
         run: >
           dotnet test tests/AetherNet.Tests/AetherNet.Tests.csproj
-          --no-build -c Release
+          -c Release
           --logger "console;verbosity=normal"
           --collect:"XPlat Code Coverage"
           --results-directory coverage
