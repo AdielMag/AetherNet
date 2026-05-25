@@ -84,3 +84,17 @@ jobs:
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+
+      # ── Create GitHub Release so repo sidebar links to each release ─────────
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.version.outputs.VERSION }}" \
+            --title "v${{ steps.version.outputs.VERSION }}" \
+            --notes "## NuGet packages
+
+          - [AetherNet.Shared ${{ steps.version.outputs.VERSION }}](https://www.nuget.org/packages/AetherNet.Shared/${{ steps.version.outputs.VERSION }})
+          - [AetherNet.Unity ${{ steps.version.outputs.VERSION }}](https://www.nuget.org/packages/AetherNet.Unity/${{ steps.version.outputs.VERSION }})" \
+            nupkg/AetherNet.Shared.${{ steps.version.outputs.VERSION }}.nupkg \
+            nupkg/AetherNet.Unity.${{ steps.version.outputs.VERSION }}.nupkg
