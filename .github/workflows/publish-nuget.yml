@@ -80,8 +80,7 @@ jobs:
 
       # ── Push both packages ──────────────────────────────────────────────────
       - name: Push to NuGet.org
-        # Skipped gracefully if NUGET_API_KEY secret is not yet configured
-        if: ${{ secrets.NUGET_API_KEY != '' }}
+        continue-on-error: true  # no-op until NUGET_API_KEY secret is added
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: >
@@ -91,6 +90,7 @@ jobs:
           --skip-duplicate
 
       - name: Push to GitHub Packages
+        continue-on-error: true
         run: |
           dotnet nuget add source \
             --username ${{ github.repository_owner }} \
