@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version tag (e.g. v0.1.0)"
+        required: true
+        default: "v0.1.0"
 
 permissions:
   contents: write
@@ -22,6 +28,15 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Restore
         run: dotnet restore src/AetherNet.Shared/AetherNet.Shared.csproj
@@ -42,17 +57,11 @@ jobs:
 
       - name: Push to upm branch
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.tag.outputs.TAG }}
         run: |
-          # Force-include the Plugins DLLs (they're gitignored on main)
           git add -f unity/com.aethernet.unity/Runtime/Plugins/AetherNet.Shared.dll
           git add -f unity/com.aethernet.unity/Runtime/Plugins/Aether.Physics2D.dll
-
           git commit -m "Build UPM package for $TAG"
-
-          # Push the commit to the upm branch (force — upm always mirrors latest tag)
           git push origin "HEAD:refs/heads/upm" --force
-
-          # Mirror a versioned tag onto the upm branch so users can pin
           git tag -f "upm/$TAG"
           git push origin "upm/$TAG" --force
