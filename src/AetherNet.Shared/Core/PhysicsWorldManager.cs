@@ -180,7 +180,7 @@ public sealed class PhysicsWorldManager
     public void SetLinearVelocity(int entityId, in SNV2 vel)  { Body? b = GetBodyOrNull(entityId); if (b != null) b.LinearVelocity = AetherInterop.ToAether(vel); }
     public void SetAngularVelocity(int entityId, float angVel){ Body? b = GetBodyOrNull(entityId); if (b != null) b.AngularVelocity = angVel; }
     public void SetPosition(int entityId, in SNV2 pos)        { Body? b = GetBodyOrNull(entityId); if (b != null) b.Position = AetherInterop.ToAether(pos); }
-    public bool IsSleeping(int entityId) => !(GetBodyOrNull(entityId)?.Awake ?? false);
+    public bool IsSleeping(int entityId) { var b = GetBodyOrNull(entityId); return b != null && !b.Awake; }
     public void SetSleepState(int entityId, bool sleep)       { Body? b = GetBodyOrNull(entityId); if (b == null) return; b.Awake = !sleep; }
     public void ResetDynamics(int entityId) => GetBodyOrNull(entityId)?.ResetDynamics();
 
