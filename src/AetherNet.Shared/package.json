@@ -1,0 +1,10 @@
+{
+  "name": "com.aethernet.shared",
+  "version": "0.1.0",
+  "displayName": "AetherNet Shared",
+  "description": "GC-free, deterministic 2D physics shared library for server-authoritative Unity multiplayer.",
+  "unity": "6000.0",
+  "author": {
+    "name": "AetherNet Contributors"
+  }
+}
