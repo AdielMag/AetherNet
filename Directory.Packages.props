@@ -1,0 +1,8 @@
+<Project>
+  <!-- AetherNet manages its own package versions via explicit PackageReference elements.
+       This disables Central Package Version Management if this repo is nested inside a
+       parent solution that uses CPM (e.g. when referenced as a local source dependency). -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
