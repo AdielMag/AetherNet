@@ -2,6 +2,7 @@ using nkast.Aether.Physics2D.Common;
 using nkast.Aether.Physics2D.Dynamics;
 using UnityEngine;
 using AetherNet.Collision;
+using Vector2 = UnityEngine.Vector2;
 
 namespace AetherNet
 {

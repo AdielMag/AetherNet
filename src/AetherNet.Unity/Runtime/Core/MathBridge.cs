@@ -18,7 +18,9 @@ namespace AetherNet
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityEngine.Vector3 ToUnity3(System.Numerics.Vector2 v)
-            => new UnityEngine.Vector3(v.X, v.Y, 0f);
+            => SimulationConstants.Plane == SimulationPlane.XZ
+                ? new UnityEngine.Vector3(v.X, 0f, v.Y)
+                : new UnityEngine.Vector3(v.X, v.Y, 0f);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static System.Numerics.Vector2 WorldToSim(UnityEngine.Vector2 worldPos)
@@ -30,7 +32,9 @@ namespace AetherNet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static System.Numerics.Vector2 WorldToSim(UnityEngine.Vector3 worldPos)
         {
-            var n = new System.Numerics.Vector2(worldPos.x, worldPos.y);
+            var n = SimulationConstants.Plane == SimulationPlane.XZ
+                ? new System.Numerics.Vector2(worldPos.x, worldPos.z)
+                : new System.Numerics.Vector2(worldPos.x, worldPos.y);
             return MathExtensions.ToSimulation(in n);
         }
 
