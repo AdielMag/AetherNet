@@ -21,9 +21,9 @@ namespace AetherNet.Editor
                 : new Color(0.1f, 0.9f, 0.1f, 0.9f);
 
             Transform tf     = col.transform;
-            Vector3   center = tf.TransformPoint(new Vector3(offset.x, offset.y, 0f));
-            Vector3   halfX  = tf.TransformVector(new Vector3(size.x * 0.5f, 0f, 0f));
-            Vector3   halfY  = tf.TransformVector(new Vector3(0f, size.y * 0.5f, 0f));
+            Vector3   center = tf.TransformPoint(GizmoHelper.To3D(offset));
+            Vector3   halfX  = tf.TransformVector(GizmoHelper.To3D(new Vector2(size.x * 0.5f, 0f)));
+            Vector3   halfY  = tf.TransformVector(GizmoHelper.To3D(new Vector2(0f, size.y * 0.5f)));
 
             Vector3 tl = center - halfX + halfY;
             Vector3 tr = center + halfX + halfY;

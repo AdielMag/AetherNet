@@ -1,3 +1,4 @@
+#nullable enable
 using nkast.Aether.Physics2D.Dynamics;
 using UnityEngine;
 
@@ -125,9 +126,10 @@ namespace AetherNet
                         _currAngle + (_currAngle - _prevAngle) * a);
                     break;
             }
-            _transform.SetPositionAndRotation(
-                MathBridge.SimToWorld3(simPos),
-                Quaternion.Euler(0f, 0f, worldAngle));
+            var rot = SimulationConstants.Plane == SimulationPlane.XZ
+                ? Quaternion.Euler(0f, -worldAngle, 0f)
+                : Quaternion.Euler(0f, 0f, worldAngle);
+            _transform.SetPositionAndRotation(MathBridge.SimToWorld3(simPos), rot);
         }
     }
 }

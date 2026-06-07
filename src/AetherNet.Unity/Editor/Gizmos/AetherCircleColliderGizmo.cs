@@ -21,8 +21,8 @@ namespace AetherNet.Editor
                 : new Color(0.1f, 0.9f, 0.1f, 0.9f);
 
             Transform tf     = col.transform;
-            Vector3   center = tf.TransformPoint(new Vector3(offset.x, offset.y, 0f));
-            Handles.DrawWireDisc(center, Vector3.forward, radius * tf.lossyScale.x);
+            Vector3   center = tf.TransformPoint(GizmoHelper.To3D(offset));
+            Handles.DrawWireDisc(center, GizmoHelper.PlaneNormal, radius * tf.lossyScale.x);
         }
     }
 }

@@ -27,8 +27,8 @@ namespace AetherNet.Editor
                 Vector2 a = verts.GetArrayElementAtIndex(i).vector2Value;
                 Vector2 b = verts.GetArrayElementAtIndex((i + 1) % count).vector2Value;
                 Handles.DrawLine(
-                    tf.TransformPoint(new Vector3(a.x, a.y, 0f)),
-                    tf.TransformPoint(new Vector3(b.x, b.y, 0f)));
+                    tf.TransformPoint(GizmoHelper.To3D(a)),
+                    tf.TransformPoint(GizmoHelper.To3D(b)));
             }
         }
     }

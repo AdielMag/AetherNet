@@ -1,5 +1,7 @@
+#nullable enable
 using UnityEngine;
 using AetherNet.Queries;
+using RaycastHit = AetherNet.Queries.RaycastHit;
 
 namespace AetherNet
 {

@@ -1,3 +1,4 @@
+#nullable enable
 using UnityEngine;
 using AetherNet.Collision;
 using AetherNet.Queries;

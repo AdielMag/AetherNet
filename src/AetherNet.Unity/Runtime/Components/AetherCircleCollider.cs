@@ -13,6 +13,10 @@ namespace AetherNet
         [SerializeField] private int                   _layer;
         [SerializeField] private AetherPhysicsMaterial _material;
 
+        public float   Radius    => _radius;
+        public Vector2 Offset    => _offset;
+        public bool    IsTrigger => _isTrigger;
+
         void IAetherColliderProvider.AttachToBody(Body body, PhysicsWorldManager world)
         {
             float density     = _material != null ? _material.Density     : 1f;
