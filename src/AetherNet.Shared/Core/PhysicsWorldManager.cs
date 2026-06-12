@@ -1,4 +1,5 @@
 using System;
+using nkast.Aether.Physics2D.Collision;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
 using AetherNet.Collision;
@@ -191,6 +192,33 @@ public sealed class PhysicsWorldManager
         SNV2 end = origin + direction * distance;
         _world.RayCast(_rayCastCallback, AetherInterop.ToAether(origin), AetherInterop.ToAether(end));
         _activeQueryBuffer = null;
+    }
+
+    public void OverlapCircle(in SNV2 center, float radius, PhysicsQueryBuffer buffer, int layerMask = -1)
+    {
+        buffer.ClearOverlap();
+        var aabbCenter = AetherInterop.ToAether(center);
+        var extent     = new AVec2(radius, radius);
+        var aabb       = new AABB(aabbCenter - extent, aabbCenter + extent);
+        float radiusSq = radius * radius;
+
+        _world.QueryAABB(fixture =>
+        {
+            if (buffer.OverlapCount >= buffer.OverlapResults.Length) return false;
+            if (layerMask != -1 && ((int)fixture.CollisionCategories & layerMask) == 0) return true;
+            if (fixture.IsSensor) return true;
+
+            var pos = fixture.Body.Position;
+            float dx = pos.X - aabbCenter.X;
+            float dy = pos.Y - aabbCenter.Y;
+            if (dx * dx + dy * dy <= radiusSq)
+            {
+                int entityId = (fixture.Body.Tag as EntityToken)?.EntityId ?? -1;
+                if (entityId >= 0)
+                    buffer.OverlapResults[buffer.OverlapCount++] = new OverlapResult { EntityId = entityId, FixtureIndex = 0 };
+            }
+            return true;
+        }, ref aabb);
     }
 
     public void SetNetworkProvider(INetworkStateProvider? provider) => _networkProvider = provider;
